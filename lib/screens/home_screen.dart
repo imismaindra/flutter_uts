@@ -69,6 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildTopBar(context),
           _buildHeroBanner(provider),
+          const SizedBox(height: 24),
+          _buildCategoryQuickAccess(provider),
           const SizedBox(height: 32),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -85,13 +87,14 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 280,
+            height: 300,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: featuredProducts.length,
               itemBuilder: (ctx, i) => Container(
-                width: 200,
+                width: 220,
                 margin: const EdgeInsets.only(right: 16),
                 child: ProductCard(product: featuredProducts[i], index: i),
               ),
@@ -101,6 +104,118 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildBrandStory(),
         ],
       ),
+    );
+  }
+
+  Widget _buildCategoryQuickAccess(ProductProvider provider) {
+    final categories = provider.categories.where((c) => c != 'All').toList();
+    final categoryColors = {
+      'Road Bike': const Color(0xFF1E3A8A),
+      'MTB': const Color(0xFF064E3B),
+      'Folding': const Color(0xFF4C1D95),
+      'Gravel': const Color(0xFF78350F),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text('EXPLORE COLLECTIONS', 
+            style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.5, color: const Color(0xFF9CA3AF))),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: categories.length,
+            itemBuilder: (ctx, i) {
+              final cat = categories[i];
+              final baseColor = categoryColors[cat] ?? const Color(0xFF111827);
+              
+              return GestureDetector(
+                onTap: () {
+                  provider.setSelectedCategory(cat);
+                  setState(() => _activeIndex = 1);
+                },
+                child: Container(
+                  width: 240,
+                  margin: const EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    color: baseColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      // Dark Blueprint Overlay
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              const Color(0xFF111827).withOpacity(0.7),
+                              const Color(0xFF1E3A8A).withOpacity(0.4),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Content
+                      Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(cat.toUpperCase(), 
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFFD9FF2E),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('DISCOVER SERIES', 
+                              style: GoogleFonts.outfit(
+                                color: Colors.white.withOpacity(0.6),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 10,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 15,
+                        bottom: 0,
+                        top: 0,
+                        child: Icon(
+                          _categoryIcons[cat] ?? Icons.pedal_bike_rounded,
+                          color: Colors.white.withOpacity(0.1),
+                          size: 80,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
