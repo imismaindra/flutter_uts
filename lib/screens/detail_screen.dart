@@ -208,7 +208,7 @@ class DetailScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Premium Bottom Action Bar ─────────────────────────────────────
+
           Positioned(
             bottom: 0,
             left: 0,

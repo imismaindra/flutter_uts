@@ -6,6 +6,7 @@ class ProductProvider with ChangeNotifier {
   List<Product> _products = [];
   String _searchQuery = '';
   String _selectedCategory = 'All';
+  String _sortBy = 'Newest'; // Newest, Price: Low to High, Price: High to Low
   bool _isLoading = false;
   String? _error;
 
@@ -15,6 +16,7 @@ class ProductProvider with ChangeNotifier {
   List<Product> get products => _products;
   String get searchQuery => _searchQuery;
   String get selectedCategory => _selectedCategory;
+  String get sortBy => _sortBy;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -24,7 +26,7 @@ class ProductProvider with ChangeNotifier {
   }
 
   List<Product> get filteredProducts {
-    return _products.where((p) {
+    final filtered = _products.where((p) {
       final q = _searchQuery.toLowerCase();
       final matchesSearch =
           p.name.toLowerCase().contains(q) ||
@@ -34,6 +36,23 @@ class ProductProvider with ChangeNotifier {
           _selectedCategory == 'All' || p.category == _selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
+
+    // Apply Sorting
+    switch (_sortBy) {
+      case 'Price: Low to High':
+        filtered.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'Price: High to Low':
+        filtered.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'Newest':
+      default:
+        // Newest based on ID if timestamp not available
+        filtered.sort((a, b) => (b.id ?? 0).compareTo(a.id ?? 0));
+        break;
+    }
+
+    return filtered;
   }
 
   // ─── Initialization ─────────────────────────────────────────────────────────
@@ -68,6 +87,11 @@ class ProductProvider with ChangeNotifier {
 
   void setSelectedCategory(String category) {
     _selectedCategory = category;
+    notifyListeners();
+  }
+
+  void setSortBy(String sortBy) {
+    _sortBy = sortBy;
     notifyListeners();
   }
 

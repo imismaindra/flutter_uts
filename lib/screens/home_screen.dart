@@ -39,7 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final categories = provider.categories;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: const Color(0xFFF9FAFB),
+      drawer: _buildDrawer(context),
       body: Stack(
         children: [
           SafeArea(
@@ -70,6 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   Widget _buildTopBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -84,15 +88,18 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20),
             ),
           ),
-          Container(
-            height: 44,
-            width: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFF3F4F6)),
+          GestureDetector(
+            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+            child: Container(
+              height: 44,
+              width: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFF3F4F6)),
+              ),
+              child: const Icon(Icons.menu_rounded, color: Color(0xFF111827), size: 24),
             ),
-            child: const Icon(Icons.menu_rounded, color: Color(0xFF111827), size: 24),
           ),
         ],
       ),
@@ -153,7 +160,10 @@ class _HomeScreenState extends State<HomeScreen> {
             hintText: 'Search by model...',
             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
             prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1A1A1A)),
-            suffixIcon: const Icon(Icons.tune_rounded, color: Color(0xFF1A1A1A)),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.tune_rounded, color: Color(0xFF1A1A1A)),
+              onPressed: () => _showFilterSheet(context),
+            ),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 15),
           ),
@@ -354,6 +364,94 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showFilterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Consumer<ProductProvider>(
+        builder: (context, provider, _) => Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'FILTER & SORT',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1.2),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'SORT BY',
+                style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 1),
+              ),
+              const SizedBox(height: 12),
+              ...['Newest', 'Price: Low to High', 'Price: High to Low'].map((s) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(s, style: GoogleFonts.outfit(
+                  fontWeight: s == provider.sortBy ? FontWeight.w800 : FontWeight.w500,
+                  color: s == provider.sortBy ? const Color(0xFF111827) : const Color(0xFF6B7280),
+                )),
+                trailing: s == provider.sortBy ? const Icon(Icons.check_circle_rounded, color: Color(0xFFD9FF2E)) : null,
+                onTap: () {
+                  provider.setSortBy(s);
+                  Navigator.pop(ctx);
+                },
+              )),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: const Color(0xFF111827),
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xFF111827)),
+            child: Center(
+              child: Image.network(
+                'https://www.elementbike.id/wp-content/uploads/2021/04/Logo-Element-Bike-Horizontal-300x75.png',
+                width: 200,
+                color: const Color(0xFFD9FF2E),
+                errorBuilder: (_, __, ___) => Text(
+                  'ELEMENT',
+                  style: GoogleFonts.outfit(color: const Color(0xFFD9FF2E), fontWeight: FontWeight.w900, fontSize: 28),
+                ),
+              ),
+            ),
+          ),
+          _drawerItem(Icons.info_outline_rounded, 'ABOUT ELEMENT'),
+          _drawerItem(Icons.storefront_rounded, 'STORE LOCATOR'),
+          _drawerItem(Icons.support_agent_rounded, 'SUPPORT'),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'v1.0.0 PRO EDITION',
+              style: GoogleFonts.outfit(color: Colors.white.withOpacity(0.3), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawerItem(IconData icon, String label) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white.withOpacity(0.7)),
+      title: Text(
+        label,
+        style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: 0.5),
+      ),
+      onTap: () => Navigator.pop(context),
+    );
+  }
+
   void _handleProfileTap(BuildContext context) {
     if (context.read<AuthProvider>().isAdmin) {
       Navigator.pushNamed(context, '/admin');
@@ -421,5 +519,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-
