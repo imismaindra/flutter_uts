@@ -1,9 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/cart_provider.dart';
 import '../providers/product_provider.dart';
+import '../main.dart'; // Add this for navigatorKey
 import '../providers/auth_provider.dart';
 
 class DetailScreen extends StatelessWidget {
@@ -15,142 +17,125 @@ class DetailScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9FAFB),
       body: Stack(
         children: [
-          // ── Scrollable Content ──────────────────────────────────────────
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Hero Image ────────────────────────────────────────────
-                SizedBox(
-                  height: 450,
-                  width: double.infinity,
-                  child: Hero(
-                    tag: 'image_${product.id}',
-                    child: Image.network(
-                      product.image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (ctx, err, stack) => Container(
-                        color: const Color(0xFFF3F4F6),
-                        child: const Icon(
-                          Icons.broken_image_rounded,
-                          size: 80,
-                          color: Color(0xFFD1D5DB),
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              // ── Immersive Hero Section ──────────────────────────────────
+              SliverAppBar(
+                expandedHeight: 400,
+                backgroundColor: const Color(0xFFF3F4F6),
+                automaticallyImplyLeading: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    color: const Color(0xFFF3F4F6),
+                    child: Center(
+                      child: Hero(
+                        tag: 'image_${product.id}',
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
+                          child: Image.network(
+                            product.image,
+                            fit: BoxFit.contain,
+                            errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 100, color: Color(0xFFD1D5DB)),
+                          ),
                         ),
                       ),
-                      loadingBuilder: (ctx, child, progress) {
-                        if (progress == null) return child;
-                        return Container(
-                          color: const Color(0xFFF3F4F6),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      },
                     ),
                   ),
                 ),
+              ),
 
-                // ── Product Info ──────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.all(24),
+              // ── Product Details Content ─────────────────────────────────
+              SliverToBoxAdapter(
+                child: Container(
+                  transform: Matrix4.translationValues(0, -32, 0),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 150),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Category Chip
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          product.category.toUpperCase(),
-                          style: GoogleFonts.outfit(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 11,
-                            letterSpacing: 1.5,
+                      // Breadcrumb / Category
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            product.category.toUpperCase(),
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFF9CA3AF),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              letterSpacing: 2,
+                            ),
                           ),
-                        ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF111827),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              product.formattedPrice,
+                              style: GoogleFonts.outfit(
+                                color: const Color(0xFFD9FF2E),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
-
-                      // Name
+                      
+                      // Product Name
                       Text(
-                        product.name,
+                        product.name.toUpperCase(),
                         style: GoogleFonts.outfit(
                           fontSize: 34,
-                          fontWeight: FontWeight.w800,
-                          height: 1.1,
+                          fontWeight: FontWeight.w900,
+                          height: 1.0,
                           color: const Color(0xFF111827),
                         ),
                       ),
                       const SizedBox(height: 12),
-
-                      // Rating row
+                      
+                      // Rating Summary
                       Row(
                         children: [
-                          ...List.generate(5, (i) {
-                            final filled = i < product.rating.floor();
-                            return Icon(
-                              filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                              size: 20,
-                              color: filled ? const Color(0xFFD9FF2E) : Colors.grey[300],
-                            );
-                          }),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.star_rounded, color: Color(0xFFD9FF2E), size: 22),
+                          const SizedBox(width: 4),
                           Text(
                             '${product.rating}',
                             style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              color: const Color(0xFF4B5563),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Price
-                      Text(
-                        product.formattedPrice,
-                        style: GoogleFonts.outfit(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF111827),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Specification Header
-                      Row(
-                        children: [
-                          Container(
-                            width: 4,
-                            height: 18,
-                            color: colorScheme.primary,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'TECHNICAL SPECIFICATIONS',
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
                               fontWeight: FontWeight.w800,
-                              letterSpacing: 1.2,
+                              fontSize: 16,
                               color: const Color(0xFF111827),
                             ),
                           ),
+                          const SizedBox(width: 12),
+                          Container(height: 14, width: 1.5, color: const Color(0xFFE5E7EB)),
+                          const SizedBox(width: 12),
+                          Text(
+                            '120 REVIEWS',
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFF9CA3AF),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 16),
 
-                      // Description
+                      const SizedBox(height: 40),
+
+                      // Description Section
+                      _buildSectionTitle('THE STORY'),
+                      const SizedBox(height: 12),
                       Text(
                         product.description,
                         style: GoogleFonts.outfit(
@@ -160,87 +145,70 @@ class DetailScreen extends StatelessWidget {
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Feature Grid (Simulated)
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
+
+                      const SizedBox(height: 40),
+
+                      // Technical Specifications Grid
+                      _buildSectionTitle('TECHNICAL DATA'),
+                      const SizedBox(height: 20),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: 2.2,
                         children: const [
-                          _SpecChip(icon: Icons.bolt_rounded, label: 'Pro Aero Frame'),
-                          _SpecChip(icon: Icons.balance_rounded, label: '7.8kg Weight'),
-                          _SpecChip(icon: Icons.settings_rounded, label: 'Shimano 105'),
+                          _TechnicalItem(icon: Icons.architecture_rounded, label: 'FRAME', value: 'ALX ALLOY'),
+                          _TechnicalItem(icon: Icons.settings_rounded, label: 'FORK', value: 'CARBON'),
+                          _TechnicalItem(icon: Icons.speed_rounded, label: 'DRIVETRAIN', value: 'SHIMANO 105'),
+                          _TechnicalItem(icon: Icons.balance_rounded, label: 'WEIGHT', value: '8.4 KG'),
                         ],
                       ),
-
-                      // Bottom spacing for button
-                      const SizedBox(height: 120),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
-          // ── Back Button & Actions overlay ────────────────────────────────
+          // ── Header Actions (Glassmorphic) ────────────────────────────────
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.4),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Back
-                      _CircleBtn(
-                        icon: Icons.chevron_left_rounded,
-                        onTap: () => Navigator.pop(context),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _GlassButton(
+                      icon: Icons.chevron_left_rounded,
+                      onTap: () => Navigator.pop(context),
+                    ),
+                    if (context.watch<AuthProvider>().isAdmin)
+                      Row(
+                        children: [
+                          _GlassButton(
+                            icon: Icons.edit_rounded,
+                            onTap: () => Navigator.pushNamed(context, '/add-edit', arguments: product),
+                          ),
+                          const SizedBox(width: 12),
+                          _GlassButton(
+                            icon: Icons.delete_rounded,
+                            color: Colors.red[400],
+                            onTap: () => _confirmDelete(context, product),
+                          ),
+                        ],
                       ),
-                      // Edit & Delete (admin only)
-                      if (context.watch<AuthProvider>().isAdmin)
-                        Row(
-                          children: [
-                            _CircleBtn(
-                              icon: Icons.edit_rounded,
-                              onTap: () async {
-                                await Navigator.pushNamed(
-                                  context,
-                                  '/add-edit',
-                                  arguments: product,
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 12),
-                            _CircleBtn(
-                              icon: Icons.delete_rounded,
-                              iconColor: Colors.red[600]!,
-                              onTap: () => _confirmDelete(context, product),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
 
-          // ── Buy Button ────────────────────────────────────────────────────
+          // ── Premium Bottom Action Bar ─────────────────────────────────────
           Positioned(
             bottom: 0,
             left: 0,
@@ -248,72 +216,84 @@ class DetailScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
-                border: Border(
-                  top: BorderSide(color: Colors.grey[200]!, width: 1),
-                ),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
               ),
-              child: ElevatedButton(
-                onPressed: () {
-                  final cart = context.read<CartProvider>();
-                  cart.addToCart(product);
-                  final totalItems = cart.totalItems;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: const Color(0xFF111827),
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle_rounded, color: Color(0xFFD9FF2E), size: 20),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Added to your collection',
-                              style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+              child: Row(
+                children: [
+                  Container(
+                    height: 56,
+                    width: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.favorite_border_rounded, color: Color(0xFF111827)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        context.read<CartProvider>().addToCart(product);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: const Color(0xFF111827),
+                            content: Text('Model added to your collection', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+                            behavior: SnackBarBehavior.floating,
+                            action: SnackBarAction(
+                              label: 'VIEW CART',
+                              textColor: const Color(0xFFD9FF2E),
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                navigatorKey.currentState?.pushNamed('/cart');
+                              },
                             ),
                           ),
-                        ],
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF111827),
+                        foregroundColor: const Color(0xFFD9FF2E),
+                        minimumSize: const Size.fromHeight(56),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      action: SnackBarAction(
-                        label: 'VIEW CART',
-                        textColor: const Color(0xFFD9FF2E),
-                        onPressed: () => Navigator.pushNamed(context, '/cart'),
+                      child: Text(
+                        'ADD TO COLLECTION',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 14, letterSpacing: 1),
                       ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
                   ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.shopping_bag_outlined, weight: 800),
-                    const SizedBox(width: 12),
-                    Text(
-                      'ADD TO CART',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        Container(width: 4, height: 16, color: const Color(0xFFD9FF2E)),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+            color: const Color(0xFF111827),
+          ),
+        ),
+      ],
     );
   }
 
@@ -322,36 +302,19 @@ class DetailScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        title: Text(
-          'REMOVE PRODUCT',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18),
-        ),
-        content: Text(
-          'Are you sure you want to remove "${product.name}" from the catalog?',
-          style: GoogleFonts.outfit(),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('DELETE MODEL', style: GoogleFonts.outfit(fontWeight: FontWeight.w900)),
+        content: Text('Are you sure you want to remove this model from the catalog?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('CANCEL', style: GoogleFonts.outfit(color: Colors.grey, fontWeight: FontWeight.bold)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              if (product.id != null) {
-                await context.read<ProductProvider>().deleteProduct(
-                  product.id!,
-                );
-              }
+              if (product.id != null) await context.read<ProductProvider>().deleteProduct(product.id!);
               if (context.mounted) Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[600],
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-            ),
-            child: Text('REMOVE', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('DELETE'),
           ),
         ],
       ),
@@ -359,33 +322,33 @@ class DetailScreen extends StatelessWidget {
   }
 }
 
-class _SpecChip extends StatelessWidget {
+class _TechnicalItem extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String value;
 
-  const _SpecChip({required this.icon, required this.label});
+  const _TechnicalItem({required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF111827)),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: GoogleFonts.outfit(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF374151),
-            ),
+          Icon(icon, size: 20, color: const Color(0xFF9CA3AF)),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(label, style: GoogleFonts.outfit(fontSize: 10, color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w700)),
+              Text(value, style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF111827), fontWeight: FontWeight.w800)),
+            ],
           ),
         ],
       ),
@@ -393,33 +356,33 @@ class _SpecChip extends StatelessWidget {
   }
 }
 
-class _CircleBtn extends StatelessWidget {
+class _GlassButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final Color iconColor;
+  final Color? color;
 
-  const _CircleBtn({
-    required this.icon,
-    required this.onTap,
-    this.iconColor = const Color(0xFF111827),
-  });
+  const _GlassButton({required this.icon, required this.onTap, this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      shape: const CircleBorder(),
-      elevation: 2,
-      shadowColor: Colors.black26,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Icon(icon, color: iconColor, size: 24),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color ?? const Color(0xFF111827), size: 24),
+          ),
         ),
       ),
     );
   }
 }
+
 

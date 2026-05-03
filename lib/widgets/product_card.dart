@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
+import '../providers/cart_provider.dart';
+import '../main.dart'; // For navigatorKey
 
 class ProductCard extends StatefulWidget {
   final Product product;
@@ -70,6 +73,49 @@ class _ProductCardState extends State<ProductCard> {
                                 color: const Color(0xFFD9FF2E),
                                 fontWeight: FontWeight.w900,
                                 fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Add to Cart Quick Action
+                        Positioned(
+                          bottom: 10,
+                          right: 10,
+                          child: Consumer<CartProvider>(
+                            builder: (context, cart, _) => GestureDetector(
+                              onTap: () {
+                                cart.addToCart(widget.product);
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: const Color(0xFF111827),
+                                    content: Text('Model added to your collection', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
+                                    behavior: SnackBarBehavior.floating,
+                                    action: SnackBarAction(
+                                      label: 'VIEW CART',
+                                      textColor: const Color(0xFFD9FF2E),
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                        navigatorKey.currentState?.pushNamed('/cart');
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD9FF2E),
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.add_shopping_cart_rounded, size: 18, color: Color(0xFF111827)),
                               ),
                             ),
                           ),
