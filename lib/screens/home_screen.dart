@@ -45,22 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTopBar(context),
-                _buildHeaderSection(provider),
-                const SizedBox(height: 24),
-                _buildSearchBar(context),
-                const SizedBox(height: 12),
-                _buildCategories(categories, provider),
-                Expanded(
-                  child: products.isEmpty 
-                    ? _buildEmptyState()
-                    : _buildProductGrid(products, provider),
-                ),
-              ],
-            ),
+            child: _activeIndex == 0 
+                ? _buildHomeView(provider) 
+                : _buildShopView(context, provider, products, categories),
           ),
           
           // Premium Floating Navigation Bar
@@ -69,6 +56,143 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: _buildFAB(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildHomeView(ProductProvider provider) {
+    final featuredProducts = provider.products.take(3).toList();
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTopBar(context),
+          _buildHeroBanner(provider),
+          const SizedBox(height: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('NEW ARRIVALS', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
+                TextButton(
+                  onPressed: () => setState(() => _activeIndex = 1),
+                  child: Text('VIEW ALL', style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontWeight: FontWeight.w800, fontSize: 11)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 280,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: featuredProducts.length,
+              itemBuilder: (ctx, i) => Container(
+                width: 200,
+                margin: const EdgeInsets.only(right: 16),
+                child: ProductCard(product: featuredProducts[i], index: i),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          _buildBrandStory(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShopView(BuildContext context, ProductProvider provider, List products, List<String> categories) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTopBar(context),
+        _buildHeaderSection(provider),
+        const SizedBox(height: 24),
+        _buildSearchBar(context),
+        const SizedBox(height: 12),
+        _buildCategories(categories, provider),
+        Expanded(
+          child: products.isEmpty 
+            ? _buildEmptyState()
+            : _buildProductGrid(products, provider),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroBanner(ProductProvider provider) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFF111827),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Opacity(
+              opacity: 0.1,
+              child: Icon(Icons.pedal_bike_rounded, size: 200, color: const Color(0xFFD9FF2E)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: const Color(0xFFD9FF2E), borderRadius: BorderRadius.circular(4)),
+                  child: Text('FEATURED', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 10)),
+                ),
+                const SizedBox(height: 12),
+                Text('UNLEASH THE\nPERFORMANCE', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24, height: 1)),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => setState(() => _activeIndex = 1),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD9FF2E),
+                    foregroundColor: const Color(0xFF111827),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text('SHOP NOW', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 12)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBrandStory() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.auto_awesome_rounded, color: const Color(0xFFD9FF2E), size: 32),
+          const SizedBox(height: 16),
+          Text('ENGINEERED FOR\nEXCELLENCE', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, height: 1.1)),
+          const SizedBox(height: 8),
+          Text('Every Element bike is a masterpiece of technology and design, crafted for those who demand more from their ride.', 
+            style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 13, height: 1.5)),
+        ],
+      ),
     );
   }
 
