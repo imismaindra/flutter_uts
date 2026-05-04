@@ -361,63 +361,7 @@ class CartScreen extends StatelessWidget {
   }
 
   void _checkout(BuildContext context, CartProvider cart) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(32),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: const BoxDecoration(
-                color: Color(0xFFD9FF2E),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_rounded, color: Color(0xFF111827), size: 32),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'ORDER CONFIRMED',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Your request for ${cart.totalItems} premium models has been received. Our concierge team will contact you shortly.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(height: 1.5, color: const Color(0xFF6B7280)),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  cart.clearCart();
-                  Navigator.pop(ctx); // Close sheet
-                  Navigator.pop(context); // Go back home
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF111827),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: Text(
-                  'BACK TO COLLECTION',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1.0),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    Navigator.pushNamed(context, '/checkout');
   }
 }
 

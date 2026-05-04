@@ -27,6 +27,28 @@ class _HomeScreenState extends State<HomeScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncCart();
+    });
+  }
+
+  Future<void> _syncCart() async {
+    final productProvider = context.read<ProductProvider>();
+    final cartProvider = context.read<CartProvider>();
+    
+    // Tunggu sampai produk dimuat jika belum
+    if (productProvider.products.isEmpty) {
+      await productProvider.init();
+    }
+    
+    if (mounted) {
+      await cartProvider.loadCartFromDb(productProvider.products);
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -646,27 +668,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDrawer(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return Drawer(
       backgroundColor: const Color(0xFF111827),
       child: Column(
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFF111827)),
-            child: Center(
-              child: Image.network(
-                'https://www.elementbike.id/wp-content/uploads/2021/04/Logo-Element-Bike-Horizontal-300x75.png',
-                width: 200,
-                color: const Color(0xFFD9FF2E),
-                errorBuilder: (_, __, ___) => Text(
-                  'ELEMENT',
-                  style: GoogleFonts.outfit(color: const Color(0xFFD9FF2E), fontWeight: FontWeight.w900, fontSize: 28),
-                ),
-              ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF111827),
+              border: Border(bottom: BorderSide(color: Colors.white10)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (auth.isLoggedIn) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(color: Color(0xFFD9FF2E), shape: BoxShape.circle),
+                    child: const Icon(Icons.person_rounded, color: Color(0xFF111827), size: 32),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    auth.userEmail?.split('@')[0].toUpperCase() ?? 'USER',
+                    style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
+                  ),
+                ] else ...[
+                  Image.network(
+                    'https://www.elementbike.id/wp-content/uploads/2021/04/Logo-Element-Bike-Horizontal-300x75.png',
+                    width: 200,
+                    color: const Color(0xFFD9FF2E),
+                    errorBuilder: (_, __, ___) => Text(
+                      'ELEMENT',
+                      style: GoogleFonts.outfit(color: const Color(0xFFD9FF2E), fontWeight: FontWeight.w900, fontSize: 28),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           _drawerItem(Icons.info_outline_rounded, 'ABOUT ELEMENT'),
           _drawerItem(Icons.storefront_rounded, 'STORE LOCATOR'),
           _drawerItem(Icons.support_agent_rounded, 'SUPPORT'),
+          const Divider(color: Colors.white10, height: 40),
+          if (auth.isLoggedIn)
+            _drawerItem(Icons.logout_rounded, 'SIGN OUT', 
+              color: const Color(0xFFEF4444),
+              onTap: () {
+                auth.logout();
+                Navigator.pop(context);
+              }
+            )
+          else
+            _drawerItem(Icons.login_rounded, 'SIGN IN', 
+              color: const Color(0xFFD9FF2E),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/login');
+              }
+            ),
           const Spacer(),
           Padding(
             padding: const EdgeInsets.all(24),
@@ -680,19 +739,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _drawerItem(IconData icon, String label) {
+  Widget _drawerItem(IconData icon, String label, {Color? color, VoidCallback? onTap}) {
     return ListTile(
-      leading: Icon(icon, color: Colors.white.withOpacity(0.7)),
+      leading: Icon(icon, color: color ?? Colors.white.withOpacity(0.7)),
       title: Text(
         label,
-        style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: 0.5),
+        style: GoogleFonts.outfit(
+          color: color ?? Colors.white, 
+          fontWeight: FontWeight.w600, 
+          fontSize: 13, 
+          letterSpacing: 0.5
+        ),
       ),
-      onTap: () => Navigator.pop(context),
+      onTap: onTap ?? () => Navigator.pop(context),
     );
   }
 
   void _handleProfileTap(BuildContext context) {
-    if (context.read<AuthProvider>().isAdmin) {
+    final auth = context.read<AuthProvider>();
+    if (!auth.isLoggedIn) {
+      Navigator.pushNamed(context, '/login');
+      return;
+    }
+
+    if (auth.isAdmin) {
       Navigator.pushNamed(context, '/admin');
     } else {
       _showAdminLoginDialog(context);
