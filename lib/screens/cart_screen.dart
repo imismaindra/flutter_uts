@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
+import '../utils/currency_formatter.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -218,7 +219,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '\$${total.toStringAsFixed(2)}',
+                    CurrencyFormatter.formatIDR(total),
                     style: GoogleFonts.outfit(
                       color: const Color(0xFFD9FF2E),
                       fontWeight: FontWeight.w900,

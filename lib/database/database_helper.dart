@@ -176,7 +176,7 @@ class DatabaseHelper {
     {
       'name': 'Element AeroMax CF Pro',
       'category': 'Road Bike',
-      'price': 1250.0,
+      'price': 18750000.0,
       'image': 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=800&q=80',
       'description': 'Sepeda road bike karbon performa tinggi yang dirancang untuk kecepatan dan kenyamanan jarak jauh. Dilengkapi dengan grupset Shimano Ultegra dan roda aero karbon.',
       'rating': 4.9,
@@ -185,7 +185,7 @@ class DatabaseHelper {
     {
       'name': 'Element Mountain 2.0',
       'category': 'MTB',
-      'price': 850.0,
+      'price': 12750000.0,
       'image': 'https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?auto=format&fit=crop&w=800&q=80',
       'description': 'Sepeda gunung hardtail dengan suspensi udara 120mm, drivetrain 1x12 speed, dan ban tubeless-ready untuk menaklukkan medan off-road yang menantang.',
       'rating': 4.7,
@@ -194,7 +194,7 @@ class DatabaseHelper {
     {
       'name': 'Element Pikes Gen 2',
       'category': 'Folding',
-      'price': 450.0,
+      'price': 6750000.0,
       'image': 'https://images.unsplash.com/photo-1559348349-86f1f65817fe?auto=format&fit=crop&w=800&q=80',
       'description': 'Sepeda lipat ringkas yang sempurna untuk komuting perkotaan. Mudah dilipat dan dibawa ke transportasi umum atau disimpan di bawah meja kantor.',
       'rating': 4.8,
@@ -203,7 +203,7 @@ class DatabaseHelper {
     {
       'name': 'Element Gravel X',
       'category': 'Gravel',
-      'price': 950.0,
+      'price': 14250000.0,
       'image': 'https://images.unsplash.com/photo-1541625602330-2277a1cd1f88?auto=format&fit=crop&w=800&q=80',
       'description': 'Kombinasi antara road bike dan MTB, Gravel X siap menemani petualangan Anda di segala medan, mulai dari aspal mulus hingga jalan berkerikil.',
       'rating': 4.6,
@@ -212,7 +212,7 @@ class DatabaseHelper {
     {
       'name': 'Element Road Racer',
       'category': 'Road Bike',
-      'price': 750.0,
+      'price': 11250000.0,
       'image': 'https://images.unsplash.com/photo-1532298229144-0ee0511810dd?auto=format&fit=crop&w=800&q=80',
       'description': 'Road bike entry-level yang gesit dan responsif. Cocok untuk pemula yang ingin memulai hobi bersepeda balap.',
       'rating': 4.5,
@@ -221,7 +221,7 @@ class DatabaseHelper {
     {
       'name': 'Element Folding Max',
       'category': 'Folding',
-      'price': 550.0,
+      'price': 8250000.0,
       'image': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
       'description': 'Sepeda lipat dengan roda 20 inci untuk stabilitas lebih baik namun tetap mudah disimpan.',
       'rating': 4.7,

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/currency_formatter.dart';
 import '../widgets/product_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -690,15 +691,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('\$${provider.minPrice.toInt()}', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: const Color(0xFF111827))),
-                    Text('\$${provider.maxPrice.toInt()}', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: const Color(0xFF111827))),
+                    Text(CurrencyFormatter.formatIDR(provider.minPrice), style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: const Color(0xFF111827), fontSize: 12)),
+                    Text(CurrencyFormatter.formatIDR(provider.maxPrice), style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: const Color(0xFF111827), fontSize: 12)),
                   ],
                 ),
                 RangeSlider(
                   values: RangeValues(provider.minPrice, provider.maxPrice),
                   min: 0,
-                  max: 10000,
-                  divisions: 20,
+                  max: 50000000,
+                  divisions: 50,
                   activeColor: const Color(0xFFD9FF2E),
                   inactiveColor: const Color(0xFFF3F4F6),
                   onChanged: (RangeValues values) {

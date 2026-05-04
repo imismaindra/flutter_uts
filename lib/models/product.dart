@@ -1,3 +1,5 @@
+import '../utils/currency_formatter.dart';
+
 class Product {
   final int? id;
   final String name;
@@ -62,11 +64,5 @@ class Product {
         isNew: isNew ?? this.isNew,
       );
 
-  String get formattedPrice {
-    if (price >= 1000) {
-      final k = price / 1000;
-      return '\$${k % 1 == 0 ? k.toInt() : k.toStringAsFixed(1)}K';
-    }
-    return '\$${price.toStringAsFixed(0)}';
-  }
+  String get formattedPrice => CurrencyFormatter.formatIDR(price);
 }

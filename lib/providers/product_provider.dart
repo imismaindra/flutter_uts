@@ -8,7 +8,7 @@ class ProductProvider with ChangeNotifier {
   String _selectedCategory = 'All';
   String _sortBy = 'Newest';
   double _minPrice = 0;
-  double _maxPrice = 10000;
+  double _maxPrice = 50000000;
   bool _isLoading = false;
   String? _error;
 
@@ -111,7 +111,7 @@ class ProductProvider with ChangeNotifier {
     _selectedCategory = 'All';
     _sortBy = 'Newest';
     _minPrice = 0;
-    _maxPrice = 10000;
+    _maxPrice = 50000000;
     notifyListeners();
   }
 
