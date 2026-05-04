@@ -30,11 +30,13 @@ The project utilizes the following core dependencies:
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: ^2.3.0        # Local database persistence
-  path: ^1.9.0           # File path utilities
-  provider: ^6.1.1       # Reactive state management
-  google_fonts: ^6.1.0   # Premium editorial typography
-  cupertino_icons: ^1.0.8 # iOS-style iconography support
+  sqflite: ^2.3.0               # Local database persistence
+  path: ^1.9.0                  # File path utilities
+  provider: ^6.1.1              # Reactive state management
+  google_fonts: ^6.1.0          # Premium editorial typography
+  sqflite_common_ffi: ^2.3.0+2  # SQLite FFI for Desktop (Windows/macOS)
+  sqlite3_flutter_libs: ^0.5.24 # Native SQLite libraries for FFI
+  cupertino_icons: ^1.0.8       # iOS-style iconography support
 ```
 
 ## 🚀 Getting Started

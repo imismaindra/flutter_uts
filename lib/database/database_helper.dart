@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:flutter/foundation.dart';
 import '../models/product.dart';
 
 class DatabaseHelper {
@@ -8,7 +9,8 @@ class DatabaseHelper {
 
   DatabaseHelper._internal();
 
-  Future<Database> get database async {
+  Future<Database?> get database async {
+    if (kIsWeb) return null;
     if (_database != null) return _database!;
     _database = await _initDB();
     return _database!;
@@ -68,6 +70,7 @@ class DatabaseHelper {
   // CRUD Operations
   Future<int> insertProduct(Product product) async {
     final db = await database;
+    if (db == null) return 0;
     return await db.insert(
       'products',
       product.toMap(),
@@ -77,12 +80,14 @@ class DatabaseHelper {
 
   Future<List<Product>> getAllProducts() async {
     final db = await database;
+    if (db == null) return [];
     final maps = await db.query('products', orderBy: 'id DESC');
     return maps.map((m) => Product.fromMap(m)).toList();
   }
 
   Future<int> updateProduct(Product product) async {
     final db = await database;
+    if (db == null) return 0;
     return await db.update(
       'products',
       product.toMap(),
@@ -93,12 +98,14 @@ class DatabaseHelper {
 
   Future<int> deleteProduct(int id) async {
     final db = await database;
+    if (db == null) return 0;
     return await db.delete('products', where: 'id = ?', whereArgs: [id]);
   }
 
   // Cart Operations
   Future<void> addToCart(int productId, int quantity) async {
     final db = await database;
+    if (db == null) return;
     await db.insert(
       'cart',
       {'productId': productId, 'quantity': quantity},
@@ -108,11 +115,13 @@ class DatabaseHelper {
 
   Future<void> removeFromCart(int productId) async {
     final db = await database;
+    if (db == null) return;
     await db.delete('cart', where: 'productId = ?', whereArgs: [productId]);
   }
 
   Future<void> updateCartQuantity(int productId, int quantity) async {
     final db = await database;
+    if (db == null) return;
     await db.update(
       'cart',
       {'quantity': quantity},
@@ -123,11 +132,13 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getCartItems() async {
     final db = await database;
+    if (db == null) return [];
     return await db.query('cart');
   }
 
   Future<void> clearCart() async {
     final db = await database;
+    if (db == null) return;
     await db.delete('cart');
   }
 

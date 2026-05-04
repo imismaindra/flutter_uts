@@ -6,7 +6,9 @@ class ProductProvider with ChangeNotifier {
   List<Product> _products = [];
   String _searchQuery = '';
   String _selectedCategory = 'All';
-  String _sortBy = 'Newest'; // Newest, Price: Low to High, Price: High to Low
+  String _sortBy = 'Newest';
+  double _minPrice = 0;
+  double _maxPrice = 10000;
   bool _isLoading = false;
   String? _error;
 
@@ -17,6 +19,8 @@ class ProductProvider with ChangeNotifier {
   String get searchQuery => _searchQuery;
   String get selectedCategory => _selectedCategory;
   String get sortBy => _sortBy;
+  double get minPrice => _minPrice;
+  double get maxPrice => _maxPrice;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -34,7 +38,8 @@ class ProductProvider with ChangeNotifier {
           p.description.toLowerCase().contains(q);
       final matchesCategory =
           _selectedCategory == 'All' || p.category == _selectedCategory;
-      return matchesSearch && matchesCategory;
+      final matchesPrice = p.price >= _minPrice && p.price <= _maxPrice;
+      return matchesSearch && matchesCategory && matchesPrice;
     }).toList();
 
     // Apply Sorting
@@ -92,6 +97,21 @@ class ProductProvider with ChangeNotifier {
 
   void setSortBy(String sortBy) {
     _sortBy = sortBy;
+    notifyListeners();
+  }
+
+  void setPriceRange(double min, double max) {
+    _minPrice = min;
+    _maxPrice = max;
+    notifyListeners();
+  }
+
+  void resetFilters() {
+    _searchQuery = '';
+    _selectedCategory = 'All';
+    _sortBy = 'Newest';
+    _minPrice = 0;
+    _maxPrice = 10000;
     notifyListeners();
   }
 

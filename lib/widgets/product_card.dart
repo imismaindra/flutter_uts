@@ -15,14 +15,37 @@ class ProductCard extends StatefulWidget {
   State<ProductCard> createState() => _ProductCardState();
 }
 
-class _ProductCardState extends State<ProductCard> {
+class _ProductCardState extends State<ProductCard> with SingleTickerProviderStateMixin {
   bool _isFavorite = false;
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.98).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
       onTap: () => Navigator.pushNamed(context, '/detail', arguments: widget.product),
-      child: Container(
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
@@ -213,7 +236,8 @@ class _ProductCardState extends State<ProductCard> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 

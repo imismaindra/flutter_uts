@@ -115,10 +115,22 @@ class _HomeScreenState extends State<HomeScreen> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: featuredProducts.length,
-              itemBuilder: (ctx, i) => Container(
-                width: 220,
-                margin: const EdgeInsets.only(right: 16),
-                child: ProductCard(product: featuredProducts[i], index: i),
+              itemBuilder: (ctx, i) => TweenAnimationBuilder<double>(
+                duration: Duration(milliseconds: 400 + (i * 100)),
+                tween: Tween(begin: 0.0, end: 1.0),
+                curve: Curves.easeOutQuart,
+                builder: (context, value, child) => Transform.translate(
+                  offset: Offset(50 * (1 - value), 0),
+                  child: Opacity(
+                    opacity: value,
+                    child: child,
+                  ),
+                ),
+                child: Container(
+                  width: 220,
+                  margin: const EdgeInsets.only(right: 16),
+                  child: ProductCard(product: featuredProducts[i], index: i),
+                ),
               ),
             ),
           ),
@@ -163,7 +175,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   provider.setSelectedCategory(cat);
                   setState(() => _activeIndex = 1);
                 },
-                child: Container(
+                child: TweenAnimationBuilder<double>(
+                  duration: Duration(milliseconds: 500 + (i * 100)),
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) => Transform.scale(
+                    scale: value,
+                    child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
+                  ),
+                  child: Container(
                   width: 240,
                   margin: const EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
@@ -233,8 +253,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-              );
-            },
+              ),
+            );
+          },
           ),
         ),
       ],
@@ -628,39 +649,116 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showFilterSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => Consumer<ProductProvider>(
-        builder: (context, provider, _) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'FILTER & SORT',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: 1.2),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'SORT BY',
-                style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 1),
-              ),
-              const SizedBox(height: 12),
-              ...['Newest', 'Price: Low to High', 'Price: High to Low'].map((s) => ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(s, style: GoogleFonts.outfit(
-                  fontWeight: s == provider.sortBy ? FontWeight.w800 : FontWeight.w500,
-                  color: s == provider.sortBy ? const Color(0xFF111827) : const Color(0xFF6B7280),
-                )),
-                trailing: s == provider.sortBy ? const Icon(Icons.check_circle_rounded, color: Color(0xFFD9FF2E)) : null,
-                onTap: () {
-                  provider.setSortBy(s);
-                  Navigator.pop(ctx);
-                },
-              )),
-              const SizedBox(height: 16),
-            ],
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) => Consumer<ProductProvider>(
+          builder: (context, provider, _) => Padding(
+            padding: EdgeInsets.only(
+              left: 24, right: 24, top: 24,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 40,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'FILTER & SORT',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20, letterSpacing: 1),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        provider.resetFilters();
+                        Navigator.pop(ctx);
+                      },
+                      child: Text('RESET', style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w800, fontSize: 12)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                
+                // Price Range Section
+                Text(
+                  'PRICE RANGE',
+                  style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 1),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('\$${provider.minPrice.toInt()}', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: const Color(0xFF111827))),
+                    Text('\$${provider.maxPrice.toInt()}', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, color: const Color(0xFF111827))),
+                  ],
+                ),
+                RangeSlider(
+                  values: RangeValues(provider.minPrice, provider.maxPrice),
+                  min: 0,
+                  max: 10000,
+                  divisions: 20,
+                  activeColor: const Color(0xFFD9FF2E),
+                  inactiveColor: const Color(0xFFF3F4F6),
+                  onChanged: (RangeValues values) {
+                    provider.setPriceRange(values.start, values.end);
+                  },
+                ),
+                const SizedBox(height: 32),
+
+                // Sort Section
+                Text(
+                  'SORT BY',
+                  style: GoogleFonts.outfit(color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 1),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: ['Newest', 'Price: Low to High', 'Price: High to Low'].map((s) {
+                    final isSelected = s == provider.sortBy;
+                    return GestureDetector(
+                      onTap: () => provider.setSortBy(s),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFF111827) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isSelected ? const Color(0xFF111827) : const Color(0xFFE5E7EB)),
+                        ),
+                        child: Text(
+                          s,
+                          style: GoogleFonts.outfit(
+                            color: isSelected ? const Color(0xFFD9FF2E) : const Color(0xFF6B7280),
+                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 40),
+
+                // Apply Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF111827),
+                      foregroundColor: const Color(0xFFD9FF2E),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: Text('APPLY FILTERS', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
