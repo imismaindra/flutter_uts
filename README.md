@@ -72,4 +72,4 @@ To access the **Management Portal (Admin Screen)**:
 
 ---
 
-**Developed with ❤️ by Senior UI/UX Designer & Flutter Engineer**
+**Developed by Ismaindra & Wahyu Noufarizam Akbar**
