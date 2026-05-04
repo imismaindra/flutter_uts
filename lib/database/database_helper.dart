@@ -21,7 +21,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'products.db');
     return await openDatabase(
       path, 
-      version: 2, 
+      version: 3, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -35,6 +35,22 @@ class DatabaseHelper {
           quantity INTEGER NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          role TEXT NOT NULL DEFAULT 'user'
+        )
+      ''');
+      // Create a default admin
+      await db.insert('users', {
+        'email': 'admin@element.com',
+        'password': 'password123',
+        'role': 'admin'
+      });
     }
   }
 
@@ -57,6 +73,20 @@ class DatabaseHelper {
         quantity INTEGER NOT NULL
       )
     ''');
+    await db.execute('''
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user'
+      )
+    ''');
+    // Create a default admin
+    await db.insert('users', {
+      'email': 'admin@element.com',
+      'password': 'password123',
+      'role': 'admin'
+    });
     await _insertInitialData(db);
   }
 
@@ -195,7 +225,7 @@ class DatabaseHelper {
       'image': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
       'description': 'Sepeda lipat dengan roda 20 inci untuk stabilitas lebih baik namun tetap mudah disimpan.',
       'rating': 4.7,
-      'isNew': 0,
+      'isNew': 1,
     },
   ];
 
@@ -208,5 +238,33 @@ class DatabaseHelper {
         .toList()
         .reversed
         .toList();
+  }
+  // ─── AUTH OPERATIONS ────────────────────────────────────────────────────────
+  Future<int> registerUser(String email, String password, {String role = 'user'}) async {
+    final db = await database;
+    if (db == null) return -1;
+    try {
+      return await db.insert('users', {
+        'email': email,
+        'password': password,
+        'role': role,
+      });
+    } catch (e) {
+      return -1; // Email already exists or other error
+    }
+  }
+
+  Future<Map<String, dynamic>?> loginUser(String email, String password) async {
+    final db = await database;
+    if (db == null) return null;
+    final List<Map<String, dynamic>> results = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
+    if (results.isNotEmpty) {
+      return results.first;
+    }
+    return null;
   }
 }

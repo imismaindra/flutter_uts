@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../database/database_helper.dart';
 
 class AuthProvider with ChangeNotifier {
   bool _isAdmin;
@@ -12,27 +13,54 @@ class AuthProvider with ChangeNotifier {
   String? get userEmail => _userEmail;
 
   Future<bool> login(String email, String password) async {
-    // Mock authentication delay
-    await Future.delayed(const Duration(seconds: 1));
+    // 1. Cek di Database
+    final userData = await DatabaseHelper.instance.loginUser(email, password);
     
-    // Simple logic: any email/password works for demo
-    if (email.isNotEmpty && password.length >= 6) {
+    if (userData != null) {
       _isLoggedIn = true;
       _userEmail = email;
+      _isAdmin = userData['role'] == 'admin';
       notifyListeners();
       return true;
     }
+
+    // 2. Fallback untuk Web (In-Memory Mock)
+    if (kIsWeb) {
+      if (email.isNotEmpty && password.length >= 6) {
+        _isLoggedIn = true;
+        _userEmail = email;
+        _isAdmin = email.contains('admin');
+        notifyListeners();
+        return true;
+      }
+    }
+    
     return false;
   }
 
   Future<bool> register(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (email.isNotEmpty && password.length >= 6) {
+    // 1. Simpan ke Database
+    final result = await DatabaseHelper.instance.registerUser(email, password);
+    
+    if (result != -1) {
       _isLoggedIn = true;
       _userEmail = email;
+      _isAdmin = false; // Default register is user
       notifyListeners();
       return true;
     }
+
+    // 2. Fallback untuk Web
+    if (kIsWeb) {
+      if (email.isNotEmpty && password.length >= 6) {
+        _isLoggedIn = true;
+        _userEmail = email;
+        _isAdmin = false;
+        notifyListeners();
+        return true;
+      }
+    }
+
     return false;
   }
 
