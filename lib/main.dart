@@ -9,6 +9,7 @@ import 'screens/home_screen.dart';
 import 'screens/detail_screen.dart';
 import 'screens/add_edit_product_screen.dart';
 import 'screens/cart_screen.dart';
+import 'screens/splash_screen.dart'; // Add this
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,8 +60,9 @@ class MyApp extends StatelessWidget {
           iconTheme: IconThemeData(color: Color(0xFF1A1A1A)),
         ),
       ),
-      initialRoute: '/',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/': (context) => const HomeScreen(),
         '/detail': (context) => const DetailScreen(),
         '/add-edit': (context) => const AddEditProductScreen(),
