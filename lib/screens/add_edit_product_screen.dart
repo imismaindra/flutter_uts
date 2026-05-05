@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../providers/product_provider.dart';
+import '../utils/app_toast.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   const AddEditProductScreen({super.key});
@@ -63,6 +68,28 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   bool get _isEditing => _editProduct != null;
 
+  Future<void> _pickImage() async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+      
+      if (image != null) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = p.basename(image.path);
+        final savedImage = await File(image.path).copy('${appDir.path}/$fileName');
+        
+        setState(() {
+          _imageCtrl.text = savedImage.path;
+        });
+      }
+    } catch (e) {
+      AppToast.error(context, 'Failed to pick image: $e');
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
@@ -85,12 +112,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       } else {
         await provider.addProduct(product);
       }
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        AppToast.success(
+          context, 
+          _isEditing ? 'MODEL UPDATED SUCCESSFULLY' : 'MODEL PUBLISHED TO CATALOG',
+        );
+        Navigator.pop(context);
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppToast.error(context, 'OPERATION FAILED: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -142,8 +173,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             const SizedBox(height: 20),
             _buildField(
               controller: _priceCtrl,
-              label: 'RETAIL PRICE (USD)',
-              hint: '0.00',
+              label: 'RETAIL PRICE (IDR)',
+              hint: 'e.g., 1500000',
               icon: Icons.payments_outlined,
               keyboardType: TextInputType.number,
               validator: (v) => v!.isEmpty ? 'Price required' : null,
@@ -154,11 +185,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             const SizedBox(height: 20),
             _buildField(
               controller: _imageCtrl,
-              label: 'PRODUCT IMAGE URL',
-              hint: 'https://...',
+              label: 'PRODUCT IMAGE SOURCE',
+              hint: 'Local path or URL...',
               icon: Icons.image_search_outlined,
               onChanged: (_) => setState(() {}),
-              validator: (v) => v!.isEmpty ? 'Image URL required' : null,
+              suffix: IconButton(
+                onPressed: _pickImage,
+                icon: const Icon(Icons.add_a_photo_rounded, color: Color(0xFF111827)),
+                tooltip: 'Select from Gallery',
+              ),
+              validator: (v) => v!.isEmpty ? 'Image source required' : null,
             ),
             const SizedBox(height: 20),
             _buildField(
@@ -206,11 +242,17 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             ? Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    _imageCtrl.text,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-                  ),
+                  _imageCtrl.text.startsWith('http')
+                      ? Image.network(
+                          _imageCtrl.text,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+                        )
+                      : Image.file(
+                          File(_imageCtrl.text),
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+                        ),
                   Positioned(
                     top: 12,
                     right: 12,
@@ -284,6 +326,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     required IconData icon,
     TextInputType? keyboardType,
     int maxLines = 1,
+    Widget? suffix,
     String? Function(String?)? validator,
     void Function(String)? onChanged,
   }) {
@@ -313,6 +356,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             hintText: hint,
             hintStyle: GoogleFonts.outfit(color: const Color(0xFFD1D5DB), fontWeight: FontWeight.w500),
             prefixIcon: Icon(icon, color: const Color(0xFF111827), size: 20),
+            suffixIcon: suffix,
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

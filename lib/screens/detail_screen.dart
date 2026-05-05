@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,11 +37,17 @@ class DetailScreen extends StatelessWidget {
                         tag: 'image_${product.id}',
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-                          child: Image.network(
-                            product.image,
-                            fit: BoxFit.contain,
-                            errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 100, color: Color(0xFFD1D5DB)),
-                          ),
+                          child: product.image.startsWith('http')
+                            ? Image.network(
+                                product.image,
+                                fit: BoxFit.contain,
+                                errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 100, color: Color(0xFFD1D5DB)),
+                              )
+                            : Image.file(
+                                File(product.image),
+                                fit: BoxFit.contain,
+                                errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 100, color: Color(0xFFD1D5DB)),
+                              ),
                         ),
                       ),
                     ),

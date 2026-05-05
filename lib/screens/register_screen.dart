@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/app_toast.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,26 +19,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
-      );
+      AppToast.error(context, 'Please fill in all fields');
       return;
     }
 
     setState(() => _isLoading = true);
     final success = await context.read<AuthProvider>().register(
-      _emailController.text,
-      _passwordController.text,
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+      name: _nameController.text.trim(),
     );
     setState(() => _isLoading = false);
 
     if (success) {
-      if (mounted) Navigator.pushReplacementNamed(context, '/');
+      if (mounted) {
+        AppToast.success(context, 'Account created successfully!');
+        Navigator.pushReplacementNamed(context, '/');
+      }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration failed')),
-        );
+        AppToast.error(context, 'Registration failed. Try another email');
       }
     }
   }
@@ -130,6 +131,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  bool _obscurePassword = true;
+
   Widget _buildInput(String label, TextEditingController controller, IconData icon, {bool isPassword = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,10 +149,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 12),
         TextField(
           controller: controller,
-          obscureText: isPassword,
+          obscureText: isPassword ? _obscurePassword : false,
           style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w700),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF), size: 20),
+            suffixIcon: isPassword 
+              ? IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    color: const Color(0xFF9CA3AF),
+                    size: 20,
+                  ),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                )
+              : null,
             filled: true,
             fillColor: Colors.white.withOpacity(0.05),
             border: OutlineInputBorder(

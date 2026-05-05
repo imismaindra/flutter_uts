@@ -358,6 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   Widget _buildTopBar(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       child: Row(
@@ -371,18 +372,62 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20),
             ),
           ),
-          GestureDetector(
-            onTap: () => _scaffoldKey.currentState?.openDrawer(),
-            child: Container(
-              height: 44,
-              width: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFF3F4F6)),
-              ),
-              child: const Icon(Icons.menu_rounded, color: Color(0xFF111827), size: 24),
-            ),
+          Row(
+            children: [
+              if (auth.isAdmin)
+                IconButton(
+                  onPressed: () => Navigator.pushNamed(context, '/admin'),
+                  icon: const Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFD9FF2E)),
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xFF111827),
+                    padding: const EdgeInsets.all(8),
+                  ),
+                ),
+              if (auth.isAdmin) const SizedBox(width: 8),
+              if (auth.isLoggedIn) ...[
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'HELLO,',
+                      style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w800, color: const Color(0xFF9CA3AF), letterSpacing: 1),
+                    ),
+                    Text(
+                      auth.userEmail?.split('@')[0].toUpperCase() ?? 'MEMBER',
+                      style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: const Color(0xFF111827)),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () => _handleProfileTap(context),
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: const Color(0xFF111827),
+                    backgroundImage: auth.userAvatar != null ? FileImage(File(auth.userAvatar!)) : null,
+                    child: auth.userAvatar == null
+                        ? Text(
+                            auth.userName?[0].toUpperCase() ?? 'U',
+                            style: GoogleFonts.outfit(color: const Color(0xFFD9FF2E), fontWeight: FontWeight.w900, fontSize: 14),
+                          )
+                        : null,
+                  ),
+                ),
+              ] else
+                GestureDetector(
+                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                  child: Container(
+                    height: 44,
+                    width: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFF3F4F6)),
+                    ),
+                    child: const Icon(Icons.menu_rounded, color: Color(0xFF111827), size: 24),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -396,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'COLLECTION 2024',
+            'BEST COLLECTION',
             style: GoogleFonts.outfit(
               color: const Color(0xFF9CA3AF),
               fontSize: 12,
@@ -782,14 +827,28 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 if (auth.isLoggedIn) ...[
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 60,
+                    height: 60,
                     decoration: const BoxDecoration(color: Color(0xFFD9FF2E), shape: BoxShape.circle),
-                    child: const Icon(Icons.person_rounded, color: Color(0xFF111827), size: 32),
+                    child: ClipOval(
+                      child: auth.userAvatar != null
+                          ? Image.file(File(auth.userAvatar!), fit: BoxFit.cover)
+                          : Center(
+                              child: Text(
+                                auth.userName?[0].toUpperCase() ?? 'U',
+                                style: GoogleFonts.outfit(color: const Color(0xFF111827), fontWeight: FontWeight.w900, fontSize: 24),
+                              ),
+                            ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    auth.userEmail?.split('@')[0].toUpperCase() ?? 'USER',
+                    auth.userName?.toUpperCase() ?? 'USER',
                     style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
+                  ),
+                  Text(
+                    auth.isAdmin ? 'SYSTEM ADMINISTRATOR' : 'PREMIUM MEMBER',
+                    style: GoogleFonts.outfit(color: const Color(0xFFD9FF2E).withOpacity(0.5), fontWeight: FontWeight.w800, fontSize: 10, letterSpacing: 1),
                   ),
                 ] else ...[
                   Image.network(
@@ -805,6 +864,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          if (auth.isAdmin)
+            _drawerItem(Icons.admin_panel_settings_rounded, 'CONTROL CENTER', 
+              color: const Color(0xFFD9FF2E),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/admin');
+              }
+            ),
           _drawerItem(Icons.info_outline_rounded, 'ABOUT ELEMENT'),
           _drawerItem(Icons.storefront_rounded, 'STORE LOCATOR'),
           _drawerItem(Icons.support_agent_rounded, 'SUPPORT'),
@@ -860,70 +927,6 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushNamed(context, '/login');
       return;
     }
-
-    if (auth.isAdmin) {
-      Navigator.pushNamed(context, '/admin');
-    } else {
-      _showAdminLoginDialog(context);
-    }
-  }
-
-  void _showAdminLoginDialog(BuildContext context) {
-    final pinController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        title: Text(
-          'ADMIN ACCESS',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1.2),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Enter security PIN to access the management portal.',
-              style: GoogleFonts.outfit(fontSize: 13, color: const Color(0xFF6B7280)),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: pinController,
-              obscureText: true,
-              keyboardType: TextInputType.number,
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w800, letterSpacing: 4),
-              decoration: InputDecoration(
-                hintText: 'PIN CODE',
-                hintStyle: GoogleFonts.outfit(letterSpacing: 0, fontWeight: FontWeight.w500, fontSize: 12),
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide.none),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('CANCEL', style: GoogleFonts.outfit(color: Colors.grey, fontWeight: FontWeight.w700)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (pinController.text == '1234') {
-                context.read<AuthProvider>().setAdmin(true);
-                Navigator.pop(ctx);
-                Navigator.pushNamed(context, '/admin');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A1A1A),
-              foregroundColor: const Color(0xFFD9FF2E),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-            ),
-            child: Text('VERIFY', style: GoogleFonts.outfit(fontWeight: FontWeight.w900)),
-          ),
-        ],
-      ),
-    );
+    Navigator.pushNamed(context, '/profile');
   }
 }

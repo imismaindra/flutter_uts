@@ -16,7 +16,8 @@ import 'screens/cart_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/checkout_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/register_screen.dart'; // Add this // Add this
+import 'screens/register_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,6 +85,7 @@ class MyApp extends StatelessWidget {
         '/checkout': (context) => const CheckoutScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }

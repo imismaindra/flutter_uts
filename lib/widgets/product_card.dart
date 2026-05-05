@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -72,11 +73,17 @@ class _ProductCardState extends State<ProductCard> with SingleTickerProviderStat
                             tag: 'image_${widget.product.id}',
                             child: Padding(
                               padding: const EdgeInsets.all(12),
-                              child: Image.network(
-                                widget.product.image,
-                                fit: BoxFit.contain,
-                                errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 40, color: Color(0xFFD1D5DB)),
-                              ),
+                              child: widget.product.image.startsWith('http')
+                                ? Image.network(
+                                    widget.product.image,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 40, color: Color(0xFFD1D5DB)),
+                                  )
+                                : Image.file(
+                                    File(widget.product.image),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 40, color: Color(0xFFD1D5DB)),
+                                  ),
                             ),
                           ),
                         ),

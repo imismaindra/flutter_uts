@@ -21,7 +21,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'products.db');
     return await openDatabase(
       path, 
-      version: 3, 
+      version: 4, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -52,6 +52,12 @@ class DatabaseHelper {
         'role': 'admin'
       });
     }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE users ADD COLUMN name TEXT');
+      await db.execute('ALTER TABLE users ADD COLUMN avatar TEXT');
+      // Update existing admin with a name
+      await db.update('users', {'name': 'Administrator'}, where: 'email = ?', whereArgs: ['admin@element.com']);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -78,6 +84,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
+        name TEXT,
+        avatar TEXT,
         role TEXT NOT NULL DEFAULT 'user'
       )
     ''');
@@ -240,13 +248,14 @@ class DatabaseHelper {
         .toList();
   }
   // ─── AUTH OPERATIONS ────────────────────────────────────────────────────────
-  Future<int> registerUser(String email, String password, {String role = 'user'}) async {
+  Future<int> registerUser(String email, String password, {String? name, String role = 'user'}) async {
     final db = await database;
     if (db == null) return -1;
     try {
       return await db.insert('users', {
         'email': email,
         'password': password,
+        'name': name ?? email.split('@')[0],
         'role': role,
       });
     } catch (e) {
@@ -266,5 +275,28 @@ class DatabaseHelper {
       return results.first;
     }
     return null;
+  }
+
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    final db = await database;
+    if (db == null) return [];
+    return await db.query('users', orderBy: 'id DESC');
+  }
+
+  Future<int> deleteUser(int id) async {
+    final db = await database;
+    if (db == null) return 0;
+    return await db.delete('users', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> updateUserProfile(int id, Map<String, dynamic> data) async {
+    final db = await database;
+    if (db == null) return 0;
+    return await db.update(
+      'users',
+      data,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
