@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,7 @@ import '../providers/cart_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/product_card.dart';
+import '../utils/app_toast.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _searchController = TextEditingController();
   int _activeIndex = 0;
 
@@ -38,8 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _syncCart() async {
     final productProvider = context.read<ProductProvider>();
     final cartProvider = context.read<CartProvider>();
+    final auth = context.read<AuthProvider>();
     
-    // Tunggu sampai produk dimuat jika belum
+    cartProvider.setUserId(auth.userId);
+    
     if (productProvider.products.isEmpty) {
       await productProvider.init();
     }
@@ -83,6 +88,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeView(ProductProvider provider) {
+    if (provider.isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF111827)));
+    }
+
     final featuredProducts = provider.products.take(3).toList();
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -274,9 +283,11 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 12),
         _buildCategories(categories, provider),
         Expanded(
-          child: products.isEmpty 
-            ? _buildEmptyState()
-            : _buildProductGrid(products, provider),
+          child: provider.isLoading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF111827)))
+              : products.isEmpty
+                  ? _buildEmptyState()
+                  : _buildProductGrid(products, provider),
         ),
       ],
     );
@@ -355,8 +366,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   Widget _buildTopBar(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     return Padding(
@@ -364,13 +373,31 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.network(
-            'https://www.elementbike.id/wp-content/uploads/2021/04/Logo-Element-Bike-Horizontal-300x75.png',
-            height: 24,
-            errorBuilder: (_, __, ___) => Text(
-              'ELEMENT',
-              style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20),
-            ),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                child: Container(
+                  height: 44,
+                  width: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFF3F4F6)),
+                  ),
+                  child: const Icon(Icons.menu_rounded, color: Color(0xFF111827), size: 24),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Image.network(
+                'https://www.elementbike.id/wp-content/uploads/2021/04/Logo-Element-Bike-Horizontal-300x75.png',
+                height: 24,
+                errorBuilder: (_, __, ___) => Text(
+                  'ELEMENT',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20),
+                ),
+              ),
+            ],
           ),
           Row(
             children: [
@@ -393,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: GoogleFonts.outfit(fontSize: 8, fontWeight: FontWeight.w800, color: const Color(0xFF9CA3AF), letterSpacing: 1),
                     ),
                     Text(
-                      auth.userEmail?.split('@')[0].toUpperCase() ?? 'MEMBER',
+                      auth.userName?.toUpperCase() ?? 'MEMBER',
                       style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w900, color: const Color(0xFF111827)),
                     ),
                   ],
@@ -414,18 +441,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ] else
-                GestureDetector(
-                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                  child: Container(
-                    height: 44,
-                    width: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFF3F4F6)),
-                    ),
-                    child: const Icon(Icons.menu_rounded, color: Color(0xFF111827), size: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pushNamed(context, '/login'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF111827),
+                    foregroundColor: const Color(0xFFD9FF2E),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
+                  child: Text('SIGN IN', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 12)),
                 ),
             ],
           ),
@@ -880,8 +905,10 @@ class _HomeScreenState extends State<HomeScreen> {
             _drawerItem(Icons.logout_rounded, 'SIGN OUT', 
               color: const Color(0xFFEF4444),
               onTap: () {
+                context.read<CartProvider>().clearCart();
                 auth.logout();
                 Navigator.pop(context);
+                AppToast.show(context, message: 'SUCCESSFULLY LOGGED OUT');
               }
             )
           else

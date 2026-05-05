@@ -8,6 +8,7 @@ import '../providers/cart_provider.dart';
 import '../providers/product_provider.dart';
 import '../main.dart'; // Add this for navigatorKey
 import '../providers/auth_provider.dart';
+import '../utils/app_toast.dart';
 
 class DetailScreen extends StatelessWidget {
   const DetailScreen({super.key});
@@ -36,16 +37,16 @@ class DetailScreen extends StatelessWidget {
                       child: Hero(
                         tag: 'image_${product.id}',
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
+                          padding: const EdgeInsets.all(0),
                           child: product.image.startsWith('http')
                             ? Image.network(
                                 product.image,
-                                fit: BoxFit.contain,
+                                fit: BoxFit.cover,
                                 errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 100, color: Color(0xFFD1D5DB)),
                               )
                             : Image.file(
                                 File(product.image),
-                                fit: BoxFit.contain,
+                                fit: BoxFit.cover,
                                 errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 100, color: Color(0xFFD1D5DB)),
                               ),
                         ),
@@ -248,21 +249,7 @@ class DetailScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         context.read<CartProvider>().addToCart(product);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: const Color(0xFF111827),
-                            content: Text('Model added to your collection', style: GoogleFonts.outfit(fontWeight: FontWeight.w700)),
-                            behavior: SnackBarBehavior.floating,
-                            action: SnackBarAction(
-                              label: 'VIEW CART',
-                              textColor: const Color(0xFFD9FF2E),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                navigatorKey.currentState?.pushNamed('/cart');
-                              },
-                            ),
-                          ),
-                        );
+                        AppToast.success(context, 'ADDED TO COLLECTION');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF111827),

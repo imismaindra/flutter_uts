@@ -47,15 +47,15 @@ class AuthProvider with ChangeNotifier {
     return false;
   }
 
-  Future<bool> register(String email, String password) async {
+  Future<bool> register(String email, String password, {String? name}) async {
     // 1. Simpan ke Database
-    final result = await DatabaseHelper.instance.registerUser(email, password);
+    final result = await DatabaseHelper.instance.registerUser(email, password, name: name);
     
     if (result != -1) {
       _isLoggedIn = true;
       _userId = result;
       _userEmail = email;
-      _userName = email.split('@')[0];
+      _userName = name ?? email.split('@')[0];
       _isAdmin = false; // Default register is user
       notifyListeners();
       return true;

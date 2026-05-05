@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -96,15 +97,25 @@ class CartScreen extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                item.product.image,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.directions_bike_rounded,
-                  color: Color(0xFFD1D5DB),
-                  size: 32,
-                ),
-              ),
+              child: item.product.image.startsWith('http')
+                  ? Image.network(
+                      item.product.image,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.directions_bike_rounded,
+                        color: Color(0xFFD1D5DB),
+                        size: 32,
+                      ),
+                    )
+                  : Image.file(
+                      File(item.product.image),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.directions_bike_rounded,
+                        color: Color(0xFFD1D5DB),
+                        size: 32,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 16),

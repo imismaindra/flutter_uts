@@ -245,12 +245,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   _imageCtrl.text.startsWith('http')
                       ? Image.network(
                           _imageCtrl.text,
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
                         )
                       : Image.file(
                           File(_imageCtrl.text),
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
                         ),
                   Positioned(

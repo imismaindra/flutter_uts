@@ -11,6 +11,15 @@ class CartItem {
 
 class CartProvider with ChangeNotifier {
   final List<CartItem> _items = [];
+  int? _userId;
+
+  void setUserId(int? id) {
+    _userId = id;
+    if (id == null) {
+      _items.clear();
+      notifyListeners();
+    }
+  }
 
   List<CartItem> get items => List.unmodifiable(_items);
 
@@ -23,7 +32,8 @@ class CartProvider with ChangeNotifier {
       _items.any((i) => i.product.id == productId);
 
   Future<void> loadCartFromDb(List<Product> allProducts) async {
-    final cartData = await DatabaseHelper.instance.getCartItems();
+    if (_userId == null) return;
+    final cartData = await DatabaseHelper.instance.getCartItems(_userId!);
     _items.clear();
     for (var data in cartData) {
       final productId = data['productId'];
@@ -37,49 +47,54 @@ class CartProvider with ChangeNotifier {
   }
 
   Future<void> addToCart(Product product) async {
+    if (_userId == null) return;
     final index = _items.indexWhere((i) => i.product.id == product.id);
     if (index != -1) {
       _items[index].quantity++;
-      await DatabaseHelper.instance.updateCartQuantity(product.id!, _items[index].quantity);
+      await DatabaseHelper.instance.updateCartQuantity(product.id!, _items[index].quantity, _userId!);
     } else {
       _items.add(CartItem(product: product));
-      await DatabaseHelper.instance.addToCart(product.id!, 1);
+      await DatabaseHelper.instance.addToCart(product.id!, 1, _userId!);
     }
     notifyListeners();
   }
 
   Future<void> increment(int productId) async {
+    if (_userId == null) return;
     final index = _items.indexWhere((i) => i.product.id == productId);
     if (index != -1) {
       _items[index].quantity++;
-      await DatabaseHelper.instance.updateCartQuantity(productId, _items[index].quantity);
+      await DatabaseHelper.instance.updateCartQuantity(productId, _items[index].quantity, _userId!);
       notifyListeners();
     }
   }
 
   Future<void> decrement(int productId) async {
+    if (_userId == null) return;
     final index = _items.indexWhere((i) => i.product.id == productId);
     if (index != -1) {
       if (_items[index].quantity <= 1) {
         _items.removeAt(index);
-        await DatabaseHelper.instance.removeFromCart(productId);
+        await DatabaseHelper.instance.removeFromCart(productId, _userId!);
       } else {
         _items[index].quantity--;
-        await DatabaseHelper.instance.updateCartQuantity(productId, _items[index].quantity);
+        await DatabaseHelper.instance.updateCartQuantity(productId, _items[index].quantity, _userId!);
       }
       notifyListeners();
     }
   }
 
   Future<void> removeItem(int productId) async {
+    if (_userId == null) return;
     _items.removeWhere((i) => i.product.id == productId);
-    await DatabaseHelper.instance.removeFromCart(productId);
+    await DatabaseHelper.instance.removeFromCart(productId, _userId!);
     notifyListeners();
   }
 
   Future<void> clearCart() async {
+    if (_userId == null) return;
     _items.clear();
-    await DatabaseHelper.instance.clearCart();
+    await DatabaseHelper.instance.clearCart(_userId!);
     notifyListeners();
   }
 }

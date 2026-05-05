@@ -72,16 +72,16 @@ class _ProductCardState extends State<ProductCard> with SingleTickerProviderStat
                           child: Hero(
                             tag: 'image_${widget.product.id}',
                             child: Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(0),
                               child: widget.product.image.startsWith('http')
                                 ? Image.network(
                                     widget.product.image,
-                                    fit: BoxFit.contain,
+                                    fit: BoxFit.cover,
                                     errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 40, color: Color(0xFFD1D5DB)),
                                   )
                                 : Image.file(
                                     File(widget.product.image),
-                                    fit: BoxFit.contain,
+                                    fit: BoxFit.cover,
                                     errorBuilder: (ctx, err, stack) => const Icon(Icons.pedal_bike_rounded, size: 40, color: Color(0xFFD1D5DB)),
                                   ),
                             ),

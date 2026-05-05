@@ -21,7 +21,7 @@ class DatabaseHelper {
     final path = join(dbPath, 'products.db');
     return await openDatabase(
       path, 
-      version: 4, 
+      version: 5, 
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -58,6 +58,17 @@ class DatabaseHelper {
       // Update existing admin with a name
       await db.update('users', {'name': 'Administrator'}, where: 'email = ?', whereArgs: ['admin@element.com']);
     }
+    if (oldVersion < 5) {
+      await db.execute('DROP TABLE IF EXISTS cart');
+      await db.execute('''
+        CREATE TABLE cart (
+          productId INTEGER,
+          userId INTEGER,
+          quantity INTEGER NOT NULL,
+          PRIMARY KEY (productId, userId)
+        )
+      ''');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -75,8 +86,10 @@ class DatabaseHelper {
     ''');
     await db.execute('''
       CREATE TABLE cart (
-        productId INTEGER PRIMARY KEY,
-        quantity INTEGER NOT NULL
+        productId INTEGER,
+        userId INTEGER,
+        quantity INTEGER NOT NULL,
+        PRIMARY KEY (productId, userId)
       )
     ''');
     await db.execute('''
@@ -141,43 +154,43 @@ class DatabaseHelper {
   }
 
   // Cart Operations
-  Future<void> addToCart(int productId, int quantity) async {
+  Future<List<Map<String, dynamic>>> getCartItems(int userId) async {
+    final db = await database;
+    if (db == null) return [];
+    return await db.query('cart', where: 'userId = ?', whereArgs: [userId]);
+  }
+
+  Future<void> addToCart(int productId, int quantity, int userId) async {
     final db = await database;
     if (db == null) return;
     await db.insert(
       'cart',
-      {'productId': productId, 'quantity': quantity},
+      {'productId': productId, 'userId': userId, 'quantity': quantity},
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  Future<void> removeFromCart(int productId) async {
+  Future<void> removeFromCart(int productId, int userId) async {
     final db = await database;
     if (db == null) return;
-    await db.delete('cart', where: 'productId = ?', whereArgs: [productId]);
+    await db.delete('cart', where: 'productId = ? AND userId = ?', whereArgs: [productId, userId]);
   }
 
-  Future<void> updateCartQuantity(int productId, int quantity) async {
+  Future<void> updateCartQuantity(int productId, int quantity, int userId) async {
     final db = await database;
     if (db == null) return;
     await db.update(
       'cart',
       {'quantity': quantity},
-      where: 'productId = ?',
-      whereArgs: [productId],
+      where: 'productId = ? AND userId = ?',
+      whereArgs: [productId, userId],
     );
   }
 
-  Future<List<Map<String, dynamic>>> getCartItems() async {
-    final db = await database;
-    if (db == null) return [];
-    return await db.query('cart');
-  }
-
-  Future<void> clearCart() async {
+  Future<void> clearCart(int userId) async {
     final db = await database;
     if (db == null) return;
-    await db.delete('cart');
+    await db.delete('cart', where: 'userId = ?', whereArgs: [userId]);
   }
 
   static List<Map<String, dynamic>> _defaultProductMaps() => [
