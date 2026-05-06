@@ -54,7 +54,7 @@ Terakhir Diperbarui: 2026-05-05
         - [x] Unified Image Renderer: Support link URL dan file lokal secara otomatis.
     - [x] **User Management**: Melihat daftar user terdaftar dan menghapus akun (Revoke Access).
     - [x] Navigasi khusus Admin (Quick Access Control Center).
-- [ ] **Simulasi Checkout**: Alur pengiriman & pembayaran yang sinematik.
+- [x] **Simulasi Checkout**: Alur pengiriman & pembayaran yang sinematik.
 - [ ] **Push Notifications**: Simulasi notifikasi untuk status pesanan.
 
 ## 🛠️ Tech Stack

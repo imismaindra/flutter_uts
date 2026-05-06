@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +15,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
+  bool _isProcessing = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
@@ -21,12 +24,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String _selectedPayment = 'Credit Card';
 
   void _nextStep() {
+    if (_currentStep == 1) {
+      _simulateProcessing();
+      return;
+    }
     if (_currentStep < 2) {
       setState(() => _currentStep++);
       _pageController.animateToPage(
         _currentStep,
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  void _simulateProcessing() async {
+    setState(() => _isProcessing = true);
+    await Future.delayed(const Duration(seconds: 3));
+    if (mounted) {
+      setState(() {
+        _isProcessing = false;
+        _currentStep = 2;
+      });
+      _pageController.animateToPage(
+        2,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.elasticOut,
       );
     }
   }
@@ -66,23 +89,63 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         centerTitle: true,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          _buildStepIndicator(),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildShippingStep(),
-                _buildPaymentStep(),
-                _buildSuccessStep(),
-              ],
-            ),
+          Column(
+            children: [
+              _buildStepIndicator(),
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildShippingStep(),
+                    _buildPaymentStep(),
+                    _buildSuccessStep(),
+                  ],
+                ),
+              ),
+            ],
           ),
+          if (_isProcessing) _buildProcessingOverlay(),
         ],
       ),
       bottomNavigationBar: _currentStep < 2 ? _buildBottomAction() : null,
+    );
+  }
+
+  Widget _buildProcessingOverlay() {
+    return Container(
+      color: Colors.white.withOpacity(0.8),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF111827)),
+              const SizedBox(height: 24),
+              Text(
+                'VERIFYING PAYMENT...',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  letterSpacing: 2,
+                  color: const Color(0xFF111827),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Please do not close the application',
+                style: GoogleFonts.outfit(
+                  color: const Color(0xFF6B7280),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -184,6 +247,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           Text('PAYMENT METHOD',
               style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 20, letterSpacing: -0.5)),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 60,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: cart.items.length,
+              itemBuilder: (ctx, i) {
+                final product = cart.items[i].product;
+                return Container(
+                  width: 60,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: product.image.startsWith('http') 
+                          ? NetworkImage(product.image) 
+                          : FileImage(File(product.image)) as ImageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
           const SizedBox(height: 32),
           _paymentOption('Credit Card', Icons.credit_card_rounded),
           const SizedBox(height: 12),
@@ -222,14 +310,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: const BoxDecoration(
-                color: Color(0xFFD9FF2E),
-                shape: BoxShape.circle,
+            TweenAnimationBuilder<double>(
+              duration: const Duration(seconds: 1),
+              tween: Tween(begin: 0.0, end: 1.0),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) => Transform.scale(
+                scale: value,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFD9FF2E),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.pedal_bike_rounded, color: Color(0xFF111827), size: 64),
+                ),
               ),
-              child: const Icon(Icons.check_rounded, color: Color(0xFF111827), size: 64),
             ),
             const SizedBox(height: 40),
             Text(
@@ -254,22 +350,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 60),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  context.read<CartProvider>().clearCart();
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF111827),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'RETURN TO SHOWROOM',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1),
-                ),
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<CartProvider>().clearCart();
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF111827),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      minimumSize: const Size.fromHeight(64),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      'RETURN TO SHOWROOM',
+                      style: GoogleFonts.outfit(fontWeight: FontWeight.w900, letterSpacing: 1),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'TRACK SHIPMENT',
+                      style: GoogleFonts.outfit(
+                        color: const Color(0xFF111827),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
